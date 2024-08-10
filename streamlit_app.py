@@ -26,6 +26,7 @@ def parse_assets_json(file_content):
 def display_last_five_images(data):
     if not isinstance(data, list) or len(data) == 0:
         st.error("No image data found in assets.txt.")
+        st.write(data)  # Debugging: print out the structure to inspect
         return
     
     # Select the last five images
