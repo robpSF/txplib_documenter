@@ -6,11 +6,14 @@ import pandas as pd
 
 def extract_design_id_file(zip_file, target_file_name="design_id=2.txt"):
     with zipfile.ZipFile(zip_file, 'r') as z:
-        for file_name in z.namelist():
+        file_list = z.namelist()
+        st.write("Files in the archive:", file_list)  # Debugging step
+        for file_name in file_list:
             if file_name.endswith(target_file_name):
                 with z.open(file_name) as f:
                     return f.read().decode('utf-8')
     return None
+
 
 def parse_json_structure(file_content):
     try:
