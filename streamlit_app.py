@@ -64,6 +64,35 @@ def create_combined_table(data):
     else:
         return None, "No data available to display."
 
+# Function to display the last five images and allow the user to select three
+def display_last_five_images(data):
+    if not isinstance(data, dict) or "list" not in data or len(data["list"]) == 0:
+        st.error("No image data found in assets.txt.")
+        return []
+    
+    # Access the list of images
+    image_list = data["list"]
+    
+    # Select the last five images by working backwards
+    last_five_images = image_list[-5:]
+    
+    # Display the images and allow the user to select three
+    selected_images = st.multiselect(
+        "Select up to 3 images:",
+        options=[img["asset_number"] for img in last_five_images],
+        default=[img["asset_number"] for img in last_five_images[:3]],
+        max_selections=3
+    )
+    
+    # Return the data for the selected images
+    selected_images_data = [
+        img for img in last_five_images if img["asset_number"] in selected_images
+    ]
+    
+    return selected_images_data
+
+
+
 # Function to generate text using the OpenAI API
 def generate_text(prompt, temp=0.7):
     url = "https://api.openai.com/v1/chat/completions"
