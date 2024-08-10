@@ -4,7 +4,7 @@ import json
 import os
 import pandas as pd
 
-def extract_design_id_file(zip_file, target_file_name="design_id=2.txt"):
+def extract_design_id_file(zip_file, target_file_name="design id=2.txt"):
     with zipfile.ZipFile(zip_file, 'r') as z:
         file_list = z.namelist()
         st.write("Files in the archive:", file_list)  # Debugging step
