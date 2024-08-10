@@ -4,8 +4,37 @@ import json
 import requests
 import pandas as pd
 
-# Existing functions remain unchanged...
+# Function to list all files in the uploaded .txplib file (zip file)
+def list_files_in_zip(zip_file):
+    try:
+        with zipfile.ZipFile(zip_file) as z:
+            return z.namelist()
+    except zipfile.BadZipFile:
+        st.error("The uploaded file is not a valid zip file.")
+        return []
 
+# Function to extract a specific file from the uploaded .txplib file (zip file)
+def extract_file_from_zip(zip_file, target_file_name):
+    try:
+        with zipfile.ZipFile(zip_file, 'r') as z:
+            for file_name in z.namelist():
+                if target_file_name in file_name:
+                    with z.open(file_name) as f:
+                        return f.read().decode('utf-8')
+    except zipfile.BadZipFile:
+        st.error("The uploaded file is not a valid zip file.")
+    return None
+
+# Function to parse JSON structure from the assets.txt content
+def parse_assets_json(file_content):
+    try:
+        data = json.loads(file_content)
+        return data
+    except json.JSONDecodeError:
+        st.error("Failed to decode JSON structure from the file.")
+        return None
+
+# Function to create a combined table and convert it to a string
 def create_combined_table(data):
     # Check if "days" and "tabs" exist in the data
     if "days" not in data or "tabs" not in data:
