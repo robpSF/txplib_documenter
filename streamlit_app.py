@@ -4,6 +4,11 @@ import json
 import pandas as pd
 import requests
 
+# Function to list all files in the uploaded .txplib file (zip file)
+def list_files_in_zip(zip_file):
+    with zipfile.ZipFile(zip_file, 'r') as z:
+        return z.namelist()
+
 # Function to extract a specific file from the uploaded .txplib file (zip file)
 def extract_file_from_zip(zip_file, target_file_name):
     with zipfile.ZipFile(zip_file, 'r') as z:
@@ -108,6 +113,10 @@ def main():
     
     if uploaded_file is not None:
         with st.spinner("Extracting and processing file..."):
+            # List all files in the .txplib file
+            file_list = list_files_in_zip(uploaded_file)
+            st.write("Files in the archive:", file_list)
+            
             # Extract the design id=2.txt file and assets.txt from the .txplib file
             design_content = extract_file_from_zip(uploaded_file, "design id=2.txt")
             assets_content = extract_file_from_zip(uploaded_file, "assets.txt")
