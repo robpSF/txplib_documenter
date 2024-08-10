@@ -23,6 +23,109 @@ def upload_to_contentful(txplib_file, selected_images_data):
     scenario_response = create_scenario_library_entry(txplib_asset_id, image_ids)
     return scenario_response
 
+# Function to upload an image to Contentful
+def upload_image_to_contentful(image_data):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    data = {
+        "fields": {
+            "assetId": {
+                "en-US": image_data["asset_number"]
+            },
+            "name": {
+                "en-US": image_data["asset_number"]
+            },
+            "tags": {
+                "en-US": image_data.get("tags", "")
+            },
+            "description": {
+                "en-US": image_data.get("description", "")
+            },
+            "url": {
+                "en-US": image_data["video_identity"]["url"]
+            }
+        }
+    }
+    response = requests.post(url, headers=headers, json=data)
+    response.raise_for_status()
+    return response.json()
+
+# Function to upload the .txplib file as an asset in Contentful
+def upload_txplib_to_contentful(txplib_file):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    # Create the asset
+    asset_data = {
+        "fields": {
+            "title": {
+                "en-US": "Scenario Library"
+            },
+            "file": {
+                "en-US": {
+                    "contentType": "application/zip",
+                    "fileName": "scenario_library.txplib",
+                    "upload": txplib_file
+                }
+            }
+        }
+    }
+    response = requests.post(url, headers=headers, json=asset_data)
+    response.raise_for_status()
+    return response.json()
+
+# Function to publish the asset in Contentful
+def publish_asset(asset_id):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}/published"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}"
+    }
+    response = requests.put(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+# Function to create a Scenario Library entry in Contentful
+def create_scenario_library_entry(asset_id, images_ids):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    data = {
+        "fields": {
+            "name": {
+                "en-US": "Scenario Library"
+            },
+            "description": {
+                "en-US": "A scenario library uploaded from Conducttr."
+            },
+            "file": {
+                "en-US": {
+                    "sys": {
+                        "type": "Link",
+                        "linkType": "Asset",
+                        "id": asset_id
+                    }
+                }
+            },
+            "gallery": {
+                "en-US": [{"sys": {"type": "Link", "linkType": "Asset", "id": img_id}} for img_id in images_ids]
+            },
+            "scenariotype": {
+                "en-US": "Facilitated"
+            }
+        }
+    }
+    response = requests.post(url, headers=headers, json=data)
+    response.raise_for_status()
+    return response.json()
+
+
 
 # Function to list all files in the uploaded .txplib file (zip file)
 def list_files_in_zip(zip_file):
