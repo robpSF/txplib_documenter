@@ -51,9 +51,18 @@ def upload_image_to_contentful(image_data):
             }
         }
     }
+    
     response = requests.post(url, headers=headers, json=data)
+    
+    # Print the response for debugging
+    st.write("Response Status Code:", response.status_code)
+    st.write("Response Content:", response.text)
+    
+    # Raise an HTTPError if the response was unsuccessful
     response.raise_for_status()
+    
     return response.json()
+
 
 # Function to upload the .txplib file as an asset in Contentful
 def upload_txplib_to_contentful(txplib_file):
