@@ -1,7 +1,6 @@
 import streamlit as st
 import zipfile
 import json
-import pandas as pd
 import requests
 
 # Function to list all files in the uploaded .txplib file (zip file)
@@ -27,84 +26,126 @@ def parse_assets_json(file_content):
         st.error("Failed to decode JSON structure from the file.")
         return None
 
-# Function to create a combined table and convert it to a string
-def create_combined_table(data):
-    if "days" not in data or "tabs" not in data:
-        st.error("The required 'days' or 'tabs' structures are not found in the file.")
-        return None, ""
-    
-    days = data["days"]
-    tabs = data["tabs"]
-    
-    combined_data = []
-    
-    for day in days:
-        day_name = day.get("name")
-        day_id = day.get("id")
-        
-        for tab in tabs:
-            if tab.get("day_id") == day_id:
-                tab_name = tab.get("name")
-                description = tab.get("serial", {}).get("description", "")
-                combined_data.append({"Day": day_name, "Tab Name": tab_name, "Description": description})
-    
-    if combined_data:
-        df = pd.DataFrame(combined_data, columns=["Day", "Tab Name", "Description"])
-        df.index = pd.RangeIndex(start=1, stop=len(df) + 1, step=1)  # Reset index and remove number column
-        table_string = df.to_string(index=False)  # Convert the DataFrame to a string without index
-        return df, table_string
-    else:
-        return None, "No data available to display."
-
-# Function to send the prompt to OpenAI and return the response
-def generate_text(prompt, temp=0.7):
-    url = "https://api.openai.com/v1/chat/completions"
+# Function to upload an image to Contentful
+def upload_image_to_contentful(image_data):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
     headers = {
-        "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",  # Get the API key from Streamlit secrets
-        "Content-Type": "application/json"
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
     }
     data = {
-        "model": "gpt-4",
-        "messages": [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": temp,
-        "max_tokens": 1000,
-        "top_p": 1.0,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
+        "fields": {
+            "assetId": {
+                "en-US": image_data["asset_number"]
+            },
+            "name": {
+                "en-US": image_data["asset_number"]
+            },
+            "tags": {
+                "en-US": image_data.get("tags", "")
+            },
+            "description": {
+                "en-US": image_data.get("description", "")
+            },
+            "url": {
+                "en-US": image_data["video_identity"]["url"]
+            }
+        }
     }
     response = requests.post(url, headers=headers, json=data)
     response.raise_for_status()
-    return response.json()["choices"][0]["message"]["content"]
+    return response.json()
 
-# Function to display the last five images and allow the user to select three
-def display_last_five_images(data):
-    if not isinstance(data, dict) or "list" not in data or len(data["list"]) == 0:
-        st.error("No image data found in assets.txt.")
-        return
+# Function to upload the .txplib file as an asset in Contentful
+def upload_txplib_to_contentful(txplib_file):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    # Create the asset
+    asset_data = {
+        "fields": {
+            "title": {
+                "en-US": "Scenario Library"
+            },
+            "file": {
+                "en-US": {
+                    "contentType": "application/zip",
+                    "fileName": "scenario_library.txplib",
+                    "upload": txplib_file
+                }
+            }
+        }
+    }
+    response = requests.post(url, headers=headers, json=asset_data)
+    response.raise_for_status()
+    return response.json()
+
+# Function to publish the asset in Contentful
+def publish_asset(asset_id):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}/published"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}"
+    }
+    response = requests.put(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+# Function to create a Scenario Library entry in Contentful
+def create_scenario_library_entry(asset_id, images_ids):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    data = {
+        "fields": {
+            "name": {
+                "en-US": "Scenario Library"
+            },
+            "description": {
+                "en-US": "A scenario library uploaded from Conducttr."
+            },
+            "file": {
+                "en-US": {
+                    "sys": {
+                        "type": "Link",
+                        "linkType": "Asset",
+                        "id": asset_id
+                    }
+                }
+            },
+            "gallery": {
+                "en-US": [{"sys": {"type": "Link", "linkType": "Asset", "id": img_id}} for img_id in images_ids]
+            },
+            "scenariotype": {
+                "en-US": "Facilitated"
+            }
+        }
+    }
+    response = requests.post(url, headers=headers, json=data)
+    response.raise_for_status()
+    return response.json()
+
+# Function to handle the upload to Contentful
+def upload_to_contentful(txplib_file, selected_images_data):
+    # Upload each selected image to Contentful and collect their IDs
+    image_ids = []
+    for img_data in selected_images_data:
+        image_response = upload_image_to_contentful(img_data)
+        image_ids.append(image_response["sys"]["id"])
     
-    # Access the list of images
-    image_list = data["list"]
+    # Upload the .txplib file as an asset in Contentful
+    txplib_response = upload_txplib_to_contentful(txplib_file)
+    txplib_asset_id = txplib_response["sys"]["id"]
     
-    # Select the last five images by working backwards
-    last_five_images = image_list[-5:]
+    # Publish the .txplib asset
+    publish_asset(txplib_asset_id)
     
-    # Display the images and allow the user to select three
-    selected_images = st.multiselect(
-        "Select up to 3 images:",
-        options=[img["asset_number"] for img in last_five_images],
-        default=[img["asset_number"] for img in last_five_images[:3]],
-        max_selections=3
-    )
-    
-    # Display selected images
-    if selected_images:
-        st.subheader("Selected Images:")
-        for img in last_five_images:
-            if img["asset_number"] in selected_images:
-                st.image(img["video_identity"]["url"], caption=img["asset_number"])
+    # Create a Scenario Library entry and link the uploaded images and txplib asset
+    scenario_response = create_scenario_library_entry(txplib_asset_id, image_ids)
+    return scenario_response
 
 def main():
     st.title("Txplib File Uploader and Scenario Description")
@@ -144,11 +185,19 @@ def main():
                 
                 # Process the assets.txt file and display the last five images
                 assets_data = parse_assets_json(assets_content)
+                selected_images_data = []
                 if assets_data:
                     st.subheader("Select Images")
-                    display_last_five_images(assets_data)
-            else:
-                st.error("Failed to locate the required files within the uploaded .txplib file.")
+                    selected_images_data = display_last_five_images(assets_data)
+                
+                # Add a button to upload the data to Contentful
+                if st.button("Upload to Contentful?"):
+                    if selected_images_data:
+                        response = upload_to_contentful(uploaded_file, selected_images_data)
+                        st.success("Uploaded successfully to Contentful!")
+                        st.write(response)
+                    else:
+                        st.warning("No images selected for upload.")
 
 if __name__ == "__main__":
     main()
