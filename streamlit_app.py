@@ -41,6 +41,7 @@ def create_combined_table(data):
     
     if combined_data:
         df = pd.DataFrame(combined_data, columns=["Day", "Tab Name", "Description"])
+        df.index = pd.RangeIndex(start=1, stop=len(df) + 1, step=1)  # Reset index and remove number column
         st.table(df)
     else:
         st.write("No data available to display.")
