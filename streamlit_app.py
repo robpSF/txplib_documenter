@@ -4,6 +4,8 @@ import json
 import requests
 import pandas as pd
 
+st.write(st.secrets)
+
 
 def upload_to_contentful(txplib_file, selected_images_data):
     # Step 1: Upload each selected image to Contentful and collect their IDs
