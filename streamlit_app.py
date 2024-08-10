@@ -115,7 +115,11 @@ def main():
         with st.spinner("Extracting and processing file..."):
             # List all files in the .txplib file
             file_list = list_files_in_zip(uploaded_file)
-            st.write("Files in the archive:", file_list)
+            
+            # Check if the required files exist
+            if "design id=2.txt" not in file_list or "assets.txt" not in file_list:
+                st.warning("This is an older version of the Conducttr file - please update the editor.")
+                return
             
             # Extract the design id=2.txt file and assets.txt from the .txplib file
             design_content = extract_file_from_zip(uploaded_file, "design id=2.txt")
