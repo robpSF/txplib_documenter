@@ -24,13 +24,15 @@ def parse_assets_json(file_content):
 
 # Function to display the last five images and allow the user to select three
 def display_last_five_images(data):
-    if not isinstance(data, list) or len(data) == 0:
+    if not isinstance(data, dict) or "list" not in data or len(data["list"]) == 0:
         st.error("No image data found in assets.txt.")
-        st.write(data)  # Debugging: print out the structure to inspect
         return
     
-    # Select the last five images
-    last_five_images = data[-5:]
+    # Access the list of images
+    image_list = data["list"]
+    
+    # Select the last five images by working backwards
+    last_five_images = image_list[-5:]
     
     # Display the images and allow the user to select three
     selected_images = st.multiselect(
