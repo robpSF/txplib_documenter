@@ -19,10 +19,10 @@ def parse_json_structure(file_content):
         st.error("Failed to decode JSON structure from the file.")
         return None
 
-def create_combined_table(data):
+def create_combined_table_string(data):
     if "days" not in data or "tabs" not in data:
         st.error("The required 'days' or 'tabs' structures are not found in the file.")
-        return
+        return ""
     
     days = data["days"]
     tabs = data["tabs"]
@@ -42,9 +42,10 @@ def create_combined_table(data):
     if combined_data:
         df = pd.DataFrame(combined_data, columns=["Day", "Tab Name", "Description"])
         df.index = pd.RangeIndex(start=1, stop=len(df) + 1, step=1)  # Reset index and remove number column
-        st.table(df)
+        table_string = df.to_string(index=False)  # Convert the DataFrame to a string without index
+        return table_string
     else:
-        st.write("No data available to display.")
+        return "No data available to display."
 
 def main():
     st.title("Txplib File Uploader and Parser")
@@ -57,7 +58,12 @@ def main():
             if file_content:
                 data = parse_json_structure(file_content)
                 if data:
-                    create_combined_table(data)
+                    table_string = create_combined_table_string(data)
+                    if table_string:
+                        serial_report = f"Review all the details in this text and write a short 60-word description of the scenario: {table_string}"
+                        st.text_area("Generated Prompt", serial_report, height=300)
+                    else:
+                        st.error("Failed to generate table string.")
             else:
                 st.error("Failed to locate 'design id=2.txt' within the uploaded .txplib file.")
 
