@@ -4,6 +4,26 @@ import json
 import requests
 import pandas as pd
 
+
+def upload_to_contentful(txplib_file, selected_images_data):
+    # Step 1: Upload each selected image to Contentful and collect their IDs
+    image_ids = []
+    for img_data in selected_images_data:
+        image_response = upload_image_to_contentful(img_data)
+        image_ids.append(image_response["sys"]["id"])
+    
+    # Step 2: Upload the .txplib file as an asset in Contentful
+    txplib_response = upload_txplib_to_contentful(txplib_file)
+    txplib_asset_id = txplib_response["sys"]["id"]
+    
+    # Step 3: Publish the .txplib asset
+    publish_asset(txplib_asset_id)
+    
+    # Step 4: Create a Scenario Library entry and link the uploaded images and txplib asset
+    scenario_response = create_scenario_library_entry(txplib_asset_id, image_ids)
+    return scenario_response
+
+
 # Function to list all files in the uploaded .txplib file (zip file)
 def list_files_in_zip(zip_file):
     try:
