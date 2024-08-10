@@ -1,7 +1,6 @@
 import streamlit as st
 import zipfile
 import json
-import os
 import pandas as pd
 
 def extract_design_id_file(zip_file, target_file_name="design id=2.txt"):
@@ -20,7 +19,7 @@ def parse_json_structure(file_content):
         st.error("Failed to decode JSON structure from the file.")
         return None
 
-def create_day_tab_tables(data):
+def create_combined_table(data):
     if "days" not in data or "tabs" not in data:
         st.error("The required 'days' or 'tabs' structures are not found in the file.")
         return
@@ -28,23 +27,23 @@ def create_day_tab_tables(data):
     days = data["days"]
     tabs = data["tabs"]
     
+    combined_data = []
+    
     for day in days:
         day_name = day.get("name")
         day_id = day.get("id")
         
-        matching_tabs = []
         for tab in tabs:
             if tab.get("day_id") == day_id:
                 tab_name = tab.get("name")
                 description = tab.get("serial", {}).get("description", "")
-                matching_tabs.append({"name": tab_name, "description": description})
-        
-        if matching_tabs:
-            st.subheader(f"Day: {day_name}")
-            df = pd.DataFrame(matching_tabs, columns=["name", "description"])
-            st.table(df)
-        else:
-            st.write(f"No matching tabs found for day: {day_name}")
+                combined_data.append({"Day": day_name, "Tab Name": tab_name, "Description": description})
+    
+    if combined_data:
+        df = pd.DataFrame(combined_data, columns=["Day", "Tab Name", "Description"])
+        st.table(df)
+    else:
+        st.write("No data available to display.")
 
 def main():
     st.title("Txplib File Uploader and Parser")
@@ -57,7 +56,7 @@ def main():
             if file_content:
                 data = parse_json_structure(file_content)
                 if data:
-                    create_day_tab_tables(data)
+                    create_combined_table(data)
             else:
                 st.error("Failed to locate 'design id=2.txt' within the uploaded .txplib file.")
 
