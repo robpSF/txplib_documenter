@@ -64,6 +64,29 @@ def create_combined_table(data):
     else:
         return None, "No data available to display."
 
+# Function to generate text using the OpenAI API
+def generate_text(prompt, temp=0.7):
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "gpt-4o",
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": temp,
+        "max_tokens": 1000,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0
+    }
+    response = requests.post(url, headers=headers, json=data)
+    #response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
+
 def main():
     st.title("Txplib File Uploader and Scenario Description")
     
