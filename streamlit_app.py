@@ -76,15 +76,8 @@ def display_last_five_images(data):
     # Select the last five images by working backwards
     last_five_images = image_list[-5:]
     
-    # Prepare the list of options and display images
-    options = []
-    for img in last_five_images:
-        url = img["video_identity"]["url"]
-        asset_name = img["asset_number"]
-        options.append(asset_name)
-        
-        # Display the image
-        st.image(url, caption=asset_name, use_column_width=True)
+    # Prepare the list of options for the multiselect
+    options = [img["asset_number"] for img in last_five_images]
     
     # Allow the user to select images
     selected_images = st.multiselect(
@@ -94,12 +87,15 @@ def display_last_five_images(data):
         max_selections=3
     )
     
-    # Return the data for the selected images
-    selected_images_data = [
-        img for img in last_five_images if img["asset_number"] in selected_images
-    ]
+    # Return the data for the selected images and display them
+    selected_images_data = []
+    for img in last_five_images:
+        if img["asset_number"] in selected_images:
+            st.image(img["video_identity"]["url"], caption=img["asset_number"], use_column_width=True)
+            selected_images_data.append(img)
     
     return selected_images_data
+
 
 
 
