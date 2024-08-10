@@ -30,7 +30,8 @@ def upload_image_to_contentful(image_data):
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
-        "Content-Type": "application/vnd.contentful.management.v1+json"
+        "Content-Type": "application/vnd.contentful.management.v1+json",
+        "X-Contentful-Content-Type": "image"  # Specify the content type ID
     }
     data = {
         "fields": {
@@ -62,6 +63,7 @@ def upload_image_to_contentful(image_data):
     response.raise_for_status()
     
     return response.json()
+
 
 
 # Function to upload the .txplib file as an asset in Contentful
