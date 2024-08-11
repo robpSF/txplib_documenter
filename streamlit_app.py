@@ -202,7 +202,8 @@ def create_scenario_library_entry(asset_id, images_ids):
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
-        "Content-Type": "application/vnd.contentful.management.v1+json"
+        "Content-Type": "application/vnd.contentful.management.v1+json",
+        "X-Contentful-Content-Type": "scenarioLibrary"  # Ensure this matches your Contentful content type ID
     }
     data = {
         "fields": {
@@ -229,9 +230,18 @@ def create_scenario_library_entry(asset_id, images_ids):
             }
         }
     }
+    
     response = requests.post(url, headers=headers, json=data)
+    
+    # Print the response for debugging
+    st.write("Create Scenario Library Entry Response Status Code:", response.status_code)
+    st.write("Create Scenario Library Entry Response Content:", response.text)
+    
+    # Raise an HTTPError if the response was unsuccessful
     response.raise_for_status()
+    
     return response.json()
+
 
 
 
