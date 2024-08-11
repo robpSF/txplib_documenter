@@ -6,7 +6,12 @@ import pandas as pd
 
 st.write(st.secrets)
 
-def upload_image_file_to_contentful(image_file):
+def download_image_from_url(image_url):
+    response = requests.get(image_url)
+    response.raise_for_status()  # Ensure we got a valid response
+    return response.content  # Return the binary content of the image
+
+def upload_image_file_to_contentful(image_binary_data):
     url = f"https://upload.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/uploads"
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
@@ -14,7 +19,7 @@ def upload_image_file_to_contentful(image_file):
     }
     
     # Upload the binary image data
-    response = requests.post(url, headers=headers, data=image_file)
+    response = requests.post(url, headers=headers, data=image_binary_data)
     
     # Print the response for debugging
     st.write("Image File Upload Response Status Code:", response.status_code)
@@ -22,6 +27,7 @@ def upload_image_file_to_contentful(image_file):
     
     response.raise_for_status()
     return response.json()["sys"]["id"]  # Return the upload ID
+
 
 
 def create_image_asset_in_contentful(upload_id, image_name):
@@ -60,6 +66,7 @@ def create_image_asset_in_contentful(upload_id, image_name):
     response.raise_for_status()
     return response.json()["sys"]["id"]  # Return the asset ID
 
+
 def process_and_publish_image_asset(asset_id):
     # Process the asset
     process_asset(asset_id)
@@ -96,8 +103,11 @@ def upload_to_contentful(txplib_file, selected_images_data):
     
     # Step 1: Upload each selected image to Contentful and collect their IDs
     for img_data in selected_images_data:
-        # Upload the image file
-        upload_id = upload_image_file_to_contentful(img_data["image_file"])
+        # Download the image from the URL
+        image_binary_data = download_image_from_url(img_data["video_identity"]["url"])
+        
+        # Upload the image binary data to Contentful
+        upload_id = upload_image_file_to_contentful(image_binary_data)
         
         # Create the image asset
         image_asset_id = create_image_asset_in_contentful(upload_id, img_data["asset_number"])
@@ -128,6 +138,7 @@ def upload_to_contentful(txplib_file, selected_images_data):
     scenario_response = create_scenario_library_entry(txplib_asset_id, image_ids, file_name, openai_description)
     
     return scenario_response
+
 
 
 
