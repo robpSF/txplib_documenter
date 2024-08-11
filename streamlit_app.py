@@ -664,7 +664,7 @@ def main():
                 # Add a button to upload the data to Contentful
                 if st.button("Upload to Contentful?"):
                     if selected_images_data:
-                        response = upload_to_contentful(uploaded_file, selected_images_data, openai_description)
+                        response = upload_to_contentful(raw_txplib_data, file_name, selected_images_data, openai_description)
                         st.success("Uploaded successfully to Contentful!")
                         st.write(response)
                     else:
