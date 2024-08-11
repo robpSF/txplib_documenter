@@ -624,12 +624,17 @@ def main():
             file_list = list_files_in_zip(uploaded_file)
             
             # Check if the required files exist
-            if "design id=2.txt" not in file_list or "assets.txt" not in file_list:
-                st.warning("This is an older version of the Conducttr file - please update the editor.")
-                return
+            #if "design id=2.txt" not in file_list or "assets.txt" not in file_list:
+            #    st.warning("This is an older version of the Conducttr file - please update the editor.")
+            #    return
+
+            if "design id=2.txt" not in file_list:
+                design_file = "design id=1.txt"
+            else
+                design_file = "design id=2.txt"
             
             # Extract the design id=2.txt file and assets.txt from the .txplib file
-            design_content = extract_file_from_zip(uploaded_file, "design id=2.txt")
+            design_content = extract_file_from_zip(uploaded_file, design_file)
             assets_content = extract_file_from_zip(uploaded_file, "assets.txt")
             
             if design_content and assets_content:
