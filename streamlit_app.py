@@ -53,12 +53,20 @@ def upload_image_file_to_contentful(image_binary_data):
     # Upload the binary image data
     response = requests.post(url, headers=headers, data=image_binary_data)
     
-    # Print the response for debugging
+    # Log the response for debugging
     st.write("Image File Upload Response Status Code:", response.status_code)
     st.write("Image File Upload Response Content:", response.text)
     
-    response.raise_for_status()
+    # Raise an HTTPError if the response was unsuccessful
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        st.error(f"HTTP error occurred: {e}")
+        st.error(f"Response content: {response.text}")
+        raise  # Re-raise the exception after logging
+    
     return response.json()["sys"]["id"]  # Return the upload ID
+
 
 
 
