@@ -169,13 +169,10 @@ def fetch_asset_latest_version(asset_id):
     return asset_data['sys']['version']
 
 
-def upload_to_contentful(txplib_file, selected_images_data, openai_description):
-    # Step 1: Store the original file object immediately
-    raw_txplib_data = store_raw_txplib_data(txplib_file)
-    
+def upload_to_contentful(raw_txplib_data, file_name, selected_images_data, openai_description):
     image_ids = []
     
-    # Step 2: Upload each selected image to Contentful and collect their IDs
+    # Step 1: Upload each selected image to Contentful and collect their IDs
     for img_data in selected_images_data:
         if "image_file" in img_data:  # Check if it's an uploaded image
             upload_id = upload_image_file_to_contentful(img_data["image_file"].read())
@@ -188,18 +185,18 @@ def upload_to_contentful(txplib_file, selected_images_data, openai_description):
         process_and_publish_image_asset(image_asset_id)
         image_ids.append(image_asset_id)
     
-    # Step 3: Upload the original .txplib file as an asset in Contentful
-    upload_id = upload_txplib_file_to_contentful(raw_txplib_data, txplib_file.name)
-    txplib_asset_id = create_txplib_asset_in_contentful(upload_id, txplib_file.name)
+    # Step 2: Upload the raw .txplib file data as an asset in Contentful
+    upload_id = upload_txplib_file_to_contentful(raw_txplib_data, file_name)
+    txplib_asset_id = create_txplib_asset_in_contentful(upload_id, file_name)
     
-    # Step 4: Process and publish the .txplib asset
+    # Step 3: Process and publish the .txplib asset
     process_and_publish_txplib_asset(txplib_asset_id)
     
-    # Step 5: Create a Scenario Library entry using the file name and OpenAI description
-    file_name = txplib_file.name
+    # Step 4: Create a Scenario Library entry using the file name and OpenAI description
     scenario_response = create_scenario_library_entry(txplib_asset_id, image_ids, file_name, openai_description)
     
     return scenario_response
+
 
 
 
@@ -619,6 +616,7 @@ def main():
     
     uploaded_file = st.file_uploader("Upload a .txplib file", type="txplib")
     file_name = uploaded_file.name  # Get the .txplib file name
+    raw_txplib_data = uploaded_file.read()
     
     if uploaded_file is not None:
         with st.spinner("Extracting and processing file..."):
