@@ -171,7 +171,7 @@ def fetch_asset_latest_version(asset_id):
 
 def upload_to_contentful(txplib_file, selected_images_data, openai_description):
     # Step 1: Store the original file object immediately
-    original_txplib_file = store_original_txplib_file(txplib_file)
+    raw_txplib_data = store_raw_txplib_data(txplib_file)
     
     image_ids = []
     
