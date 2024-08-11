@@ -5,7 +5,7 @@ import requests
 import pandas as pd
 import time
 
-st.write(st.secrets)
+#st.write(st.secrets)
 
 def store_original_txplib_data(txplib_file):
     # Store the original binary data of the file
@@ -63,7 +63,7 @@ def create_image_asset_from_url(image_url, image_name):
     
     # Log the response for debugging
     st.write("Create Image Asset Response Status Code:", response.status_code)
-    st.write("Create Image Asset Response Content:", response.text)
+    #st.write("Create Image Asset Response Content:", response.text)
     
     response.raise_for_status()
     return response.json()["sys"]["id"]  # Return the asset ID
@@ -86,7 +86,7 @@ def upload_image_file_to_contentful(image_binary_data):
     
     # Log the response for debugging
     st.write("Image File Upload Response Status Code:", response.status_code)
-    st.write("Image File Upload Response Content:", response.text)
+    #st.write("Image File Upload Response Content:", response.text)
     
     # Raise an HTTPError if the response was unsuccessful
     try:
@@ -132,7 +132,7 @@ def create_image_asset_in_contentful(upload_id, image_name):
     
     # Print the response for debugging
     st.write("Create Image Asset Response Status Code:", response.status_code)
-    st.write("Create Image Asset Response Content:", response.text)
+    #st.write("Create Image Asset Response Content:", response.text)
     
     response.raise_for_status()
     return response.json()["sys"]["id"]  # Return the asset ID
@@ -161,7 +161,7 @@ def fetch_asset_latest_version(asset_id):
     
     # Print the response for debugging
     st.write("Fetch Asset Latest Version Status Code:", response.status_code)
-    st.write("Fetch Asset Latest Version Content:", response.text)
+    #st.write("Fetch Asset Latest Version Content:", response.text)
     
     response.raise_for_status()
     
@@ -237,7 +237,7 @@ def upload_image_to_contentful(image_data):
     
     # Print the response for debugging
     st.write("Response Status Code:", response.status_code)
-    st.write("Response Content:", response.text)
+    #st.write("Response Content:", response.text)
     
     # Raise an HTTPError if the response was unsuccessful
     response.raise_for_status()
@@ -256,7 +256,7 @@ def upload_txplib_file_to_contentful(raw_file_data, file_name):
     
     # Log the response for debugging
     st.write("File Upload Response Status Code:", response.status_code)
-    st.write("File Upload Response Content:", response.text)
+    #st.write("File Upload Response Content:", response.text)
     
     response.raise_for_status()
     return response.json()["sys"]["id"]  # Return the upload ID
@@ -295,7 +295,7 @@ def create_txplib_asset_in_contentful(upload_id, file_name):
     
     # Log the response for debugging
     st.write("Create Asset Response Status Code:", response.status_code)
-    st.write("Create Asset Response Content:", response.text)
+    #st.write("Create Asset Response Content:", response.text)
     
     response.raise_for_status()
     return response.json()["sys"]["id"]  # Return the asset ID
@@ -325,7 +325,7 @@ def upload_txplib_to_contentful(txplib_file):
     
     # Print the response for debugging
     st.write("File Upload Response Status Code:", upload_response.status_code)
-    st.write("File Upload Response Content:", upload_response.text)
+    #st.write("File Upload Response Content:", upload_response.text)
     
     upload_response.raise_for_status()
     upload_data = upload_response.json()
@@ -361,7 +361,7 @@ def upload_txplib_to_contentful(txplib_file):
     
     # Print the response for debugging
     st.write("Asset Creation Response Status Code:", response.status_code)
-    st.write("Asset Creation Response Content:", response.text)
+    #st.write("Asset Creation Response Content:", response.text)
     
     response.raise_for_status()
     
@@ -412,7 +412,7 @@ def publish_asset(asset_id):
     
     # Print the response for debugging
     st.write("Publish Asset Response Status Code:", response.status_code)
-    st.write("Publish Asset Response Content:", response.text)
+    #st.write("Publish Asset Response Content:", response.text)
     
     response.raise_for_status()
     
@@ -461,7 +461,7 @@ def create_scenario_library_entry(asset_id, image_ids, file_name, openai_descrip
     
     # Log the response for debugging
     st.write("Create Scenario Library Entry Response Status Code:", response.status_code)
-    st.write("Create Scenario Library Entry Response Content:", response.text)
+    #st.write("Create Scenario Library Entry Response Content:", response.text)
     
     # Raise an HTTPError if the response was unsuccessful
     response.raise_for_status()
@@ -678,7 +678,7 @@ def main():
                     if selected_images_data:
                         response = upload_to_contentful(raw_txplib_data, file_name, selected_images_data, openai_description)
                         st.success("Uploaded successfully to Contentful!")
-                        st.write(response)
+                        #st.write(response)
                     else:
                         st.warning("No images selected for upload.")
 
