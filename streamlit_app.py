@@ -646,7 +646,7 @@ def main():
                         st.table(df)  # Display the table
                         
                         # Generate the prompt and send to OpenAI API
-                        serial_report = f"Review all the details in this text and write a 250-character description of the scenario: {table_string}"
+                        serial_report = f"Review all the details in this text and write a short description of the scenario. ##RULES Limit output to 250 characters. Text=: {table_string}"
                         openai_response = generate_text(serial_report)
                         
                         if openai_response:
