@@ -431,18 +431,19 @@ def display_last_five_images(data):
     
     selected_images_data = []
     
-    # Handle the selected images
+    # Handle the selected images and display them
     for img in last_five_images:
         if img["asset_number"] in selected_images:
+            st.image(img["video_identity"]["url"], caption=img["asset_number"], use_column_width=True)
             image_data = {
                 "asset_number": img["asset_number"],
                 "image_url": img["video_identity"]["url"]  # Assuming the image URL is in video_identity["url"]
             }
-            st.image(img["video_identity"]["url"], caption=img["asset_number"], use_column_width=True)
             selected_images_data.append(image_data)
     
-    # Handle the uploaded image
+    # Handle the uploaded image and display it
     if uploaded_image is not None:
+        st.image(uploaded_image, caption=uploaded_image.name, use_column_width=True)
         uploaded_image_data = {
             "asset_number": uploaded_image.name,
             "image_file": uploaded_image
@@ -450,6 +451,7 @@ def display_last_five_images(data):
         selected_images_data.append(uploaded_image_data)
     
     return selected_images_data
+
 
 
 
