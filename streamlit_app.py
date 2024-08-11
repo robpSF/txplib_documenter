@@ -18,12 +18,20 @@ def upload_to_contentful(txplib_file, selected_images_data):
     txplib_response = upload_txplib_to_contentful(txplib_file)
     txplib_asset_id = txplib_response["sys"]["id"]
     
-    # Step 3: Publish the .txplib asset
+    # Step 3: Process the asset to ensure it's ready for publishing
+    process_asset(txplib_asset_id)
+    
+    # (Optional) Wait for a few seconds to allow processing to complete
+    import time
+    time.sleep(5)
+    
+    # Step 4: Publish the .txplib asset
     publish_asset(txplib_asset_id)
     
-    # Step 4: Create a Scenario Library entry and link the uploaded images and txplib asset
+    # Step 5: Create a Scenario Library entry and link the uploaded images and txplib asset
     scenario_response = create_scenario_library_entry(txplib_asset_id, image_ids)
     return scenario_response
+
 
 # Function to upload an image to Contentful
 def upload_image_to_contentful(image_data):
@@ -123,6 +131,24 @@ def upload_txplib_to_contentful(txplib_file):
     return response.json()
 
 
+def process_asset(asset_id):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}/files/en-US/process"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    response = requests.put(url, headers=headers)
+    
+    # Print the response for debugging
+    st.write("Process Asset Response Status Code:", response.status_code)
+    st.write("Process Asset Response Content:", response.text)
+    
+    response.raise_for_status()
+    
+    return response.json()
+
+
+
 # Function to publish the asset in Contentful
 def publish_asset(asset_id):
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}/published"
@@ -130,8 +156,15 @@ def publish_asset(asset_id):
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}"
     }
     response = requests.put(url, headers=headers)
+    
+    # Print the response for debugging
+    st.write("Publish Asset Response Status Code:", response.status_code)
+    st.write("Publish Asset Response Content:", response.text)
+    
     response.raise_for_status()
+    
     return response.json()
+
 
 # Function to create a Scenario Library entry in Contentful
 def create_scenario_library_entry(asset_id, images_ids):
