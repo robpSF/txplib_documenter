@@ -153,7 +153,7 @@ def fetch_asset_latest_version(asset_id):
     return asset_data['sys']['version']
 
 
-def upload_to_contentful(txplib_file, selected_images_data, openai_description):
+def upload_to_contentful(txplib_file, selected_images_data):
     image_ids = []
     
     # Step 1: Upload each selected image to Contentful and collect their IDs
@@ -164,8 +164,12 @@ def upload_to_contentful(txplib_file, selected_images_data, openai_description):
             # Create the image asset
             image_asset_id = create_image_asset_in_contentful(upload_id, img_data["asset_number"])
         else:
-            # Handle images selected from existing ones
-            image_asset_id = create_image_asset_from_url(img_data["image_url"], img_data["asset_number"])
+            # Download the image from the URL
+            image_binary_data = download_image_from_url(img_data["image_url"])
+            # Upload the binary data to Contentful
+            upload_id = upload_image_file_to_contentful(image_binary_data)
+            # Create the image asset
+            image_asset_id = create_image_asset_in_contentful(upload_id, img_data["asset_number"])
         
         # Process and publish the image asset
         process_and_publish_image_asset(image_asset_id)
