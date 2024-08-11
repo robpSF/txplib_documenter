@@ -202,7 +202,7 @@ def publish_asset(asset_id):
 
 
 # Function to create a Scenario Library entry in Contentful
-def create_scenario_library_entry(asset_id, images_ids):
+def create_scenario_library_entry(asset_id, image_ids, file_name, openai_description):
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
@@ -227,7 +227,7 @@ def create_scenario_library_entry(asset_id, images_ids):
                 }
             },
             "gallery": {
-                "en-US": [{"sys": {"type": "Link", "linkType": "Asset", "id": img_id}} for img_id in images_ids]
+                "en-US": [{"sys": {"type": "Link", "linkType": "Asset", "id": img_id}} for img_id in image_ids]
             },
             "scenariotype": {
                 "en-US": "Facilitated"
@@ -245,6 +245,7 @@ def create_scenario_library_entry(asset_id, images_ids):
     response.raise_for_status()
     
     return response.json()
+
 
 
 
