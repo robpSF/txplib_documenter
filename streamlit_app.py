@@ -3,6 +3,7 @@ import zipfile
 import json
 import requests
 import pandas as pd
+import time
 
 st.write(st.secrets)
 
@@ -72,7 +73,7 @@ def process_and_publish_image_asset(asset_id):
     process_asset(asset_id)
     
     # Wait for processing to complete
-    import time
+
     time.sleep(5)  # Adjust the time based on the typical processing time
     
     # Publish the asset
