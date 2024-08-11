@@ -642,7 +642,7 @@ def main():
                 design_data = parse_assets_json(design_content)
                 
                 # Debug: Print the structure of design_data
-                st.write("Design Data:", design_data)
+                #st.write("Design Data:", design_data)
                 
                 if design_data:
                     df, table_string = create_combined_table(design_data)
