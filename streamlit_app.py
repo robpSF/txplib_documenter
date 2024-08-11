@@ -68,12 +68,29 @@ def upload_image_to_contentful(image_data):
 
 # Function to upload the .txplib file as an asset in Contentful
 def upload_txplib_to_contentful(txplib_file):
+    # Step 1: Upload the file as a binary file upload
+    upload_url = f"https://upload.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/uploads"
+    upload_headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/octet-stream"
+    }
+    
+    # Upload the file binary data
+    upload_response = requests.post(upload_url, headers=upload_headers, data=txplib_file)
+    
+    # Print the response for debugging
+    st.write("File Upload Response Status Code:", upload_response.status_code)
+    st.write("File Upload Response Content:", upload_response.text)
+    
+    upload_response.raise_for_status()
+    upload_data = upload_response.json()
+
+    # Step 2: Create an asset using the uploaded file ID
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets"
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
         "Content-Type": "application/vnd.contentful.management.v1+json"
     }
-    # Create the asset
     asset_data = {
         "fields": {
             "title": {
@@ -81,16 +98,30 @@ def upload_txplib_to_contentful(txplib_file):
             },
             "file": {
                 "en-US": {
-                    "contentType": "application/zip",
                     "fileName": "scenario_library.txplib",
-                    "upload": txplib_file
+                    "contentType": "application/zip",
+                    "uploadFrom": {
+                        "sys": {
+                            "type": "Link",
+                            "linkType": "Upload",
+                            "id": upload_data["sys"]["id"]
+                        }
+                    }
                 }
             }
         }
     }
+    
     response = requests.post(url, headers=headers, json=asset_data)
+    
+    # Print the response for debugging
+    st.write("Asset Creation Response Status Code:", response.status_code)
+    st.write("Asset Creation Response Content:", response.text)
+    
     response.raise_for_status()
+    
     return response.json()
+
 
 # Function to publish the asset in Contentful
 def publish_asset(asset_id):
