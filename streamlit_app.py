@@ -651,8 +651,13 @@ def main():
                         
                         if openai_response:
                             st.subheader("OpenAI API Response:")
-                            st.write(openai_response)
-                            openai_description = openai_response
+                            # Display the response in a text area for editing
+                            edited_text = st.text_area("Edit the scenario description:", value=openai_response)
+                            
+                            # Provide an OK button to proceed with the edited text
+                            if st.button("OK"):
+                                openai_description = edited_text
+
                 
                 # Process the assets.txt file and display the last five images
                 assets_data = parse_assets_json(assets_content)
