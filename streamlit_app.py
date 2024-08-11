@@ -6,6 +6,22 @@ import pandas as pd
 
 st.write(st.secrets)
 
+def fetch_asset_latest_version(asset_id):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}"
+    }
+    response = requests.get(url, headers=headers)
+    
+    # Print the response for debugging
+    st.write("Fetch Asset Latest Version Status Code:", response.status_code)
+    st.write("Fetch Asset Latest Version Content:", response.text)
+    
+    response.raise_for_status()
+    
+    asset_data = response.json()
+    return asset_data['sys']['version']
+
 
 def upload_to_contentful(txplib_file, selected_images_data):
     # Step 1: Upload each selected image to Contentful and collect their IDs
@@ -21,16 +37,18 @@ def upload_to_contentful(txplib_file, selected_images_data):
     # Step 3: Process the asset to ensure it's ready for publishing
     process_asset(txplib_asset_id)
     
-    # (Optional) Wait for a few seconds to allow processing to complete
+    # Step 4: Wait for processing to complete
     import time
-    time.sleep(5)
+    st.write("Waiting for asset processing to complete...")
+    time.sleep(10)  # Adjust the time based on the typical processing time
     
-    # Step 4: Publish the .txplib asset
+    # Step 5: Publish the .txplib asset with the latest version
     publish_asset(txplib_asset_id)
     
-    # Step 5: Create a Scenario Library entry and link the uploaded images and txplib asset
+    # Step 6: Create a Scenario Library entry and link the uploaded images and txplib asset
     scenario_response = create_scenario_library_entry(txplib_asset_id, image_ids)
     return scenario_response
+
 
 
 # Function to upload an image to Contentful
@@ -159,9 +177,13 @@ def process_asset(asset_id):
 
 # Function to publish the asset in Contentful
 def publish_asset(asset_id):
+    # Fetch the latest version of the asset
+    latest_version = fetch_asset_latest_version(asset_id)
+    
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}/published"
     headers = {
-        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}"
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "X-Contentful-Version": str(latest_version)  # Use the latest version
     }
     response = requests.put(url, headers=headers)
     
@@ -172,6 +194,7 @@ def publish_asset(asset_id):
     response.raise_for_status()
     
     return response.json()
+
 
 
 # Function to create a Scenario Library entry in Contentful
