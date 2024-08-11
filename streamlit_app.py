@@ -208,10 +208,10 @@ def create_scenario_library_entry(asset_id, images_ids):
     data = {
         "fields": {
             "name": {
-                "en-US": "Scenario Library"
+                "en-US": file_name  # Use the .txplib file name
             },
             "description": {
-                "en-US": "A scenario library uploaded from Conducttr."
+                "en-US": openai_description  # Use the OpenAI API response as the description
             },
             "file": {
                 "en-US": {
