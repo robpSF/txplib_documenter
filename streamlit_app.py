@@ -6,6 +6,74 @@ import pandas as pd
 
 st.write(st.secrets)
 
+def upload_image_file_to_contentful(image_file):
+    url = f"https://upload.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/uploads"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/octet-stream"
+    }
+    
+    # Upload the binary image data
+    response = requests.post(url, headers=headers, data=image_file)
+    
+    # Print the response for debugging
+    st.write("Image File Upload Response Status Code:", response.status_code)
+    st.write("Image File Upload Response Content:", response.text)
+    
+    response.raise_for_status()
+    return response.json()["sys"]["id"]  # Return the upload ID
+
+
+def create_image_asset_in_contentful(upload_id, image_name):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    asset_data = {
+        "fields": {
+            "title": {
+                "en-US": image_name
+            },
+            "file": {
+                "en-US": {
+                    "fileName": image_name,
+                    "contentType": "image/jpeg",  # Adjust content type as needed
+                    "uploadFrom": {
+                        "sys": {
+                            "type": "Link",
+                            "linkType": "Upload",
+                            "id": upload_id
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    response = requests.post(url, headers=headers, json=asset_data)
+    
+    # Print the response for debugging
+    st.write("Create Image Asset Response Status Code:", response.status_code)
+    st.write("Create Image Asset Response Content:", response.text)
+    
+    response.raise_for_status()
+    return response.json()["sys"]["id"]  # Return the asset ID
+
+def process_and_publish_image_asset(asset_id):
+    # Process the asset
+    process_asset(asset_id)
+    
+    # Wait for processing to complete
+    import time
+    time.sleep(5)  # Adjust the time based on the typical processing time
+    
+    # Publish the asset
+    publish_asset(asset_id)
+
+
+
+
 def fetch_asset_latest_version(asset_id):
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}"
     headers = {
@@ -24,11 +92,21 @@ def fetch_asset_latest_version(asset_id):
 
 
 def upload_to_contentful(txplib_file, selected_images_data):
-    # Step 1: Upload each selected image to Contentful and collect their IDs
     image_ids = []
+    
+    # Step 1: Upload each selected image to Contentful and collect their IDs
     for img_data in selected_images_data:
-        image_response = upload_image_to_contentful(img_data)
-        image_ids.append(image_response["sys"]["id"])
+        # Upload the image file
+        upload_id = upload_image_file_to_contentful(img_data["image_file"])
+        
+        # Create the image asset
+        image_asset_id = create_image_asset_in_contentful(upload_id, img_data["asset_number"])
+        
+        # Process and publish the image asset
+        process_and_publish_image_asset(image_asset_id)
+        
+        # Collect the image asset ID
+        image_ids.append(image_asset_id)
     
     # Step 2: Upload the .txplib file as an asset in Contentful
     txplib_response = upload_txplib_to_contentful(txplib_file)
@@ -38,11 +116,10 @@ def upload_to_contentful(txplib_file, selected_images_data):
     process_asset(txplib_asset_id)
     
     # Step 4: Wait for processing to complete
-    import time
     st.write("Waiting for asset processing to complete...")
-    time.sleep(10)  # Adjust the time based on the typical processing time
+    time.sleep(10)
     
-    # Step 5: Publish the .txplib asset with the latest version
+    # Step 5: Publish the .txplib asset
     publish_asset(txplib_asset_id)
     
     # Step 6: Create a Scenario Library entry using the file name and OpenAI description
