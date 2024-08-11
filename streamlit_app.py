@@ -662,6 +662,8 @@ def main():
                             # Provide an OK button to proceed with the edited text
                             if st.button("OK"):
                                 openai_description = edited_text
+                            else:
+                                openai_description = openai_response
 
                 
                 # Process the assets.txt file and display the last five images
