@@ -7,6 +7,37 @@ import time
 
 st.write(st.secrets)
 
+def create_image_asset_from_url(image_url, image_name):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    asset_data = {
+        "fields": {
+            "title": {
+                "en-US": image_name
+            },
+            "file": {
+                "en-US": {
+                    "fileName": image_name,
+                    "contentType": "image/jpeg",  # Adjust content type as needed
+                    "url": image_url  # Directly use the provided URL
+                }
+            }
+        }
+    }
+    
+    response = requests.post(url, headers=headers, json=asset_data)
+    
+    # Log the response for debugging
+    st.write("Create Image Asset Response Status Code:", response.status_code)
+    st.write("Create Image Asset Response Content:", response.text)
+    
+    response.raise_for_status()
+    return response.json()["sys"]["id"]  # Return the asset ID
+
+
 def download_image_from_url(image_url):
     response = requests.get(image_url)
     response.raise_for_status()  # Ensure we got a valid response
