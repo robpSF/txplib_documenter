@@ -153,7 +153,7 @@ def fetch_asset_latest_version(asset_id):
     return asset_data['sys']['version']
 
 
-def upload_to_contentful(txplib_file, selected_images_data):
+def upload_to_contentful(txplib_file, selected_images_data,openai_description):
     image_ids = []
     
     # Step 1: Upload each selected image to Contentful and collect their IDs
