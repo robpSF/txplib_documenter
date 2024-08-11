@@ -292,6 +292,9 @@ def publish_asset(asset_id):
 
 # Function to create a Scenario Library entry in Contentful
 def create_scenario_library_entry(asset_id, image_ids, file_name, openai_description):
+    # Truncate the description to 255 characters
+    truncated_description = openai_description[:255]
+    
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
@@ -304,7 +307,7 @@ def create_scenario_library_entry(asset_id, image_ids, file_name, openai_descrip
                 "en-US": file_name  # Use the .txplib file name
             },
             "description": {
-                "en-US": openai_description  # Use the OpenAI API response as the description
+                "en-US": truncated_description  # Truncated description
             },
             "file": {
                 "en-US": {
@@ -326,7 +329,7 @@ def create_scenario_library_entry(asset_id, image_ids, file_name, openai_descrip
     
     response = requests.post(url, headers=headers, json=data)
     
-    # Print the response for debugging
+    # Log the response for debugging
     st.write("Create Scenario Library Entry Response Status Code:", response.status_code)
     st.write("Create Scenario Library Entry Response Content:", response.text)
     
@@ -334,6 +337,7 @@ def create_scenario_library_entry(asset_id, image_ids, file_name, openai_descrip
     response.raise_for_status()
     
     return response.json()
+
 
 
 
@@ -492,7 +496,7 @@ def main():
                         st.table(df)  # Display the table
                         
                         # Generate the prompt and send to OpenAI API
-                        serial_report = f"Review all the details in this text and write a short 60-word description of the scenario: {table_string}"
+                        serial_report = f"Review all the details in this text and write a short 250 character description of the scenario: {table_string}"
                         openai_response = generate_text(serial_report)
                         
                         if openai_response:
