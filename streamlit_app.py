@@ -438,6 +438,7 @@ def display_last_five_images(data):
                 "asset_number": img["asset_number"],
                 "image_url": img["video_identity"]["url"]  # Assuming the image URL is in video_identity["url"]
             }
+            st.image(img["video_identity"]["url"], caption=img["asset_number"], use_column_width=True)
             selected_images_data.append(image_data)
     
     # Handle the uploaded image
