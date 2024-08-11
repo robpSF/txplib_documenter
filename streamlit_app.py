@@ -290,20 +290,20 @@ def process_asset(asset_id):
     }
     response = requests.put(url, headers=headers)
     
-    # Print the response for debugging
+    # Log the response status code and content for debugging
     st.write("Process Asset Response Status Code:", response.status_code)
-    
-    # Handle the 204 No Content status code without trying to parse JSON
-    if response.status_code == 204:
-        st.write("Asset processing initiated successfully.")
-        return None
-    
-    # For other successful status codes, we can return the JSON response (if any)
-    if response.status_code == 200:
-        return response.json()
+    st.write("Process Asset Response Content:", response.text)
     
     # Raise an HTTPError if the response was unsuccessful
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        st.error(f"HTTP error occurred: {e}")
+        st.error(f"Response content: {response.text}")
+        raise  # Re-raise the exception after logging
+    
+    return response.json()
+
 
 
 
