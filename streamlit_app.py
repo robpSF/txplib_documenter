@@ -630,7 +630,7 @@ def main():
 
             if "design id=2.txt" not in file_list:
                 design_file = "design id=1.txt"
-            else
+            else:
                 design_file = "design id=2.txt"
             
             # Extract the design id=2.txt file and assets.txt from the .txplib file
