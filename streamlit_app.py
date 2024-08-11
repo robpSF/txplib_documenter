@@ -302,11 +302,6 @@ def upload_txplib_to_contentful(txplib_file):
 
 
 def process_asset(asset_id):
-    # Check if the asset is already processed
-    if check_asset_processing_status(asset_id):
-        st.write(f"Asset {asset_id} has already been processed. Skipping processing.")
-        return
-    
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}/files/en-US/process"
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
@@ -314,18 +309,22 @@ def process_asset(asset_id):
     }
     response = requests.put(url, headers=headers)
     
-    # Log the response for debugging
+    # Log the response status code and content for debugging
     st.write("Process Asset Response Status Code:", response.status_code)
-    st.write("Process Asset Response Content:", response.text)
+    
+    # If the status code indicates no content, skip JSON parsing
+    if response.status_code == 204:
+        st.write(f"Asset {asset_id} processed successfully. No content returned.")
+        return None
     
     try:
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as e:
-        st.error(f"HTTP error occurred: {e}")
-        st.error(f"Response content: {response.text}")
+        # Attempt to parse the response as JSON if content is expected
+        return response.json()
+    except requests.exceptions.JSONDecodeError as e:
+        st.error(f"JSON decoding error occurred: {e}")
+        st.error(f"Response text: {response.text}")
         raise  # Re-raise the exception after logging
-    
-    return response.json()
+
 
 
 
