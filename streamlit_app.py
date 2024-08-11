@@ -99,7 +99,7 @@ def fetch_asset_latest_version(asset_id):
     return asset_data['sys']['version']
 
 
-def upload_to_contentful(txplib_file, selected_images_data):
+def upload_to_contentful(txplib_file, selected_images_data,openai_description):
     image_ids = []
     
     # Step 1: Upload each selected image to Contentful and collect their IDs
@@ -510,7 +510,7 @@ def main():
                 # Add a button to upload the data to Contentful
                 if st.button("Upload to Contentful?"):
                     if selected_images_data:
-                        response = upload_to_contentful(uploaded_file, selected_images_data)
+                        response = upload_to_contentful(uploaded_file, selected_images_data, openai_description)
                         st.success("Uploaded successfully to Contentful!")
                         st.write(response)
                     else:
