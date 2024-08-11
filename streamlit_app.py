@@ -7,6 +7,21 @@ import time
 
 st.write(st.secrets)
 
+def check_asset_processing_status(asset_id):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}"
+    }
+    response = requests.get(url, headers=headers)
+    
+    response.raise_for_status()
+    asset_details = response.json()
+    
+    # Check if the asset file is already processed
+    file_details = asset_details["fields"]["file"]["en-US"]
+    return "url" in file_details  # If 'url' is present, the asset is already processed
+
+
 def create_image_asset_from_url(image_url, image_name):
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets"
     headers = {
@@ -283,6 +298,11 @@ def upload_txplib_to_contentful(txplib_file):
 
 
 def process_asset(asset_id):
+    # Check if the asset is already processed
+    if check_asset_processing_status(asset_id):
+        st.write(f"Asset {asset_id} has already been processed. Skipping processing.")
+        return
+    
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets/{asset_id}/files/en-US/process"
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
@@ -290,11 +310,10 @@ def process_asset(asset_id):
     }
     response = requests.put(url, headers=headers)
     
-    # Log the response status code and content for debugging
+    # Log the response for debugging
     st.write("Process Asset Response Status Code:", response.status_code)
     st.write("Process Asset Response Content:", response.text)
     
-    # Raise an HTTPError if the response was unsuccessful
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
@@ -303,6 +322,7 @@ def process_asset(asset_id):
         raise  # Re-raise the exception after logging
     
     return response.json()
+
 
 
 
