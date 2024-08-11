@@ -426,14 +426,30 @@ def display_last_five_images(data):
         max_selections=3
     )
     
-    # Return the data for the selected images and display them
+    # Allow the user to upload a new image
+    uploaded_image = st.file_uploader("Or upload a new image", type=["jpg", "jpeg", "png"])
+    
     selected_images_data = []
+    
+    # Handle the selected images
     for img in last_five_images:
         if img["asset_number"] in selected_images:
-            st.image(img["video_identity"]["url"], caption=img["asset_number"], use_column_width=True)
-            selected_images_data.append(img)
+            image_data = {
+                "asset_number": img["asset_number"],
+                "image_url": img["video_identity"]["url"]  # Assuming the image URL is in video_identity["url"]
+            }
+            selected_images_data.append(image_data)
+    
+    # Handle the uploaded image
+    if uploaded_image is not None:
+        uploaded_image_data = {
+            "asset_number": uploaded_image.name,
+            "image_file": uploaded_image
+        }
+        selected_images_data.append(uploaded_image_data)
     
     return selected_images_data
+
 
 
 
