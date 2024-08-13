@@ -677,8 +677,6 @@ def generate_text(prompt, temp=0.7):
 #    return response.json()
 
 def create_tpp_library_entry(asset_id, file_name):
-    # Truncate the description to 255 characters
-    truncated_description = openai_description[:255]
     
     url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
     headers = {
