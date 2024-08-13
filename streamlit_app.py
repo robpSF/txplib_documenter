@@ -261,7 +261,58 @@ def upload_txplib_file_to_contentful(raw_file_data, file_name):
     response.raise_for_status()
     return response.json()["sys"]["id"]  # Return the upload ID
 
+def upload_tpp_file_to_contentful(raw_file_data, file_name):
+    url = f"https://upload.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/uploads"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/octet-stream"
+    }
+    
+    # Upload the raw binary file data
+    response = requests.post(url, headers=headers, data=raw_file_data)
+    
+    # Log the response for debugging
+    st.write("File Upload Response Status Code:", response.status_code)
+    #st.write("File Upload Response Content:", response.text)
+    
+    response.raise_for_status()
+    return response.json()["sys"]["id"]  # Return the upload ID
 
+def create_tpp_asset_in_contentful(upload_id, file_name):
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/assets"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json"
+    }
+    asset_data = {
+        "fields": {
+            "title": {
+                "en-US": file_name
+            },
+            "file": {
+                "en-US": {
+                    "fileName": file_name,
+                    "contentType": "application/zip",  # Adjust content type if necessary
+                    "uploadFrom": {
+                        "sys": {
+                            "type": "Link",
+                            "linkType": "Upload",
+                            "id": upload_id
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    response = requests.post(url, headers=headers, json=asset_data)
+    
+    # Log the response for debugging
+    st.write("Create Asset Response Status Code:", response.status_code)
+    #st.write("Create Asset Response Content:", response.text)
+    
+    response.raise_for_status()
+    return response.json()["sys"]["id"]  # Return the asset ID
 
 
 def create_txplib_asset_in_contentful(upload_id, file_name):
@@ -708,10 +759,15 @@ elif mode == "Persona Library":
     if uploaded_file:
         st.write("Uploading .tpp file...")
         file_name = uploaded_file.name
-        content_type = "application/octet-stream"  # Typical content type for .tpp files
-        upload_response = upload_asset(uploaded_file.getvalue(), file_name, content_type)
-        asset_id = upload_response.get("sys", {}).get("id")
-        publish_response = publish_asset(asset_id)
-        st.write("File uploaded and published:", {"file_name": file_name, "asset_id": asset_id})
-        create_response = create_persona_library_entry(file_name, asset_id)
+        raw_tpp_data = uploaded_file.read()
+
+        upload_id = upload_tpp_file_to_contentful(raw_tpp_data, file_name)
+        tpp_asset_id = create_tpp_asset_in_contentful(upload_id, file_name)
+
+        # Step 3: Process and publish the .tpp asset (should be able to use the existing txplib function
+        process_and_publish_txplib_asset(tpp_asset_id)
+
+        # Step 4: Create a Scenario Library entry using the file name and OpenAI description
+        #create_response = create_scenario_library_entry(txplib_asset_id, image_ids, file_name, openai_description)
+        create_response = create_persona_library_entry(file_name, tpp_asset_id)
         st.write("Persona Library Entry Created:", create_response)
