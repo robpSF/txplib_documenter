@@ -713,10 +713,5 @@ elif mode == "Persona Library":
         asset_id = upload_response.get("sys", {}).get("id")
         publish_response = publish_asset(asset_id)
         st.write("File uploaded and published:", {"file_name": file_name, "asset_id": asset_id})
-
-    st.header("Step 2: Create Persona Library Entry")
-    name = st.text_input("Name")
-
-    if st.button("Create Persona Library Entry"):
-        create_response = create_persona_library_entry(name, asset_id)
+        create_response = create_persona_library_entry(file_name, asset_id)
         st.write("Persona Library Entry Created:", create_response)
