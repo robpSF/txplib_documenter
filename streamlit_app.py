@@ -663,18 +663,48 @@ def generate_text(prompt, temp=0.7):
     return response.json()["choices"][0]["message"]["content"]
 
 # Function to create a Persona Library entry
-def create_persona_library_entry(name, file_id):
-    create_url = f"{base_url}/entries"
-    payload = {
+#def create_persona_library_entry(name, file_id):
+#    create_url = f"{base_url}/entries"
+#    payload = {
+#        "fields": {
+#            "name": {"en-US": name},
+#            "file": {"en-US": {"sys": {"type": "Link", "linkType": "Asset", "id": file_id}}}
+#        }
+#    }
+#    headers_with_type = headers.copy()
+#    headers_with_type["X-Contentful-Content-Type"] = "personaLibrary"
+#    response = requests.post(create_url, headers=headers_with_type, json=payload)
+#    return response.json()
+
+def create_tpp_library_entry(asset_id, file_name):
+    # Truncate the description to 255 characters
+    truncated_description = openai_description[:255]
+    
+    url = f"https://api.contentful.com/spaces/{st.secrets['CONTENTFUL_SPACE_ID']}/environments/{st.secrets['CONTENTFUL_ENVIRONMENT']}/entries"
+    headers = {
+        "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
+        "Content-Type": "application/vnd.contentful.management.v1+json",
+        "X-Contentful-Content-Type": "scenarioLibrary"  # Ensure this matches your Contentful content type ID
+    }
+    data = {
         "fields": {
             "name": {"en-US": name},
             "file": {"en-US": {"sys": {"type": "Link", "linkType": "Asset", "id": file_id}}}
         }
     }
-    headers_with_type = headers.copy()
-    headers_with_type["X-Contentful-Content-Type"] = "personaLibrary"
-    response = requests.post(create_url, headers=headers_with_type, json=payload)
+    
+    response = requests.post(url, headers=headers, json=data)
+    
+    # Log the response for debugging
+    st.write("Create Persona Library Entry Response Status Code:", response.status_code)
+    #st.write("Create Persona Library Entry Response Content:", response.text)
+    
+    # Raise an HTTPError if the response was unsuccessful
+    response.raise_for_status()
+    
     return response.json()
+
+
 
 # Streamlit app
 st.title("Contentful Library Creator")
@@ -769,5 +799,5 @@ elif mode == "Persona Library":
 
         # Step 4: Create a Scenario Library entry using the file name and OpenAI description
         #create_response = create_scenario_library_entry(txplib_asset_id, image_ids, file_name, openai_description)
-        create_response = create_persona_library_entry(file_name, tpp_asset_id)
+        create_response = create_tpp_library_entry(file_name, tpp_asset_id)
         st.write("Persona Library Entry Created:", create_response)
