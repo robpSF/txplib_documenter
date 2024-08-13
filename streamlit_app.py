@@ -686,8 +686,8 @@ def create_tpp_library_entry(asset_id, file_name):
     }
     data = {
         "fields": {
-            "name": {"en-US": name},
-            "file": {"en-US": {"sys": {"type": "Link", "linkType": "Asset", "id": file_id}}}
+            "name": {"en-US": file_name},
+            "file": {"en-US": {"sys": {"type": "Link", "linkType": "Asset", "id": asset_id}}}
         }
     }
     
