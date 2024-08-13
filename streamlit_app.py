@@ -797,5 +797,5 @@ elif mode == "Persona Library":
 
         # Step 4: Create a Scenario Library entry using the file name and OpenAI description
         #create_response = create_scenario_library_entry(txplib_asset_id, image_ids, file_name, openai_description)
-        create_response = create_tpp_library_entry(file_name, tpp_asset_id)
+        create_response = create_tpp_library_entry(tpp_asset_id, file_name)
         st.write("Persona Library Entry Created:", create_response)
