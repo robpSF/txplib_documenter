@@ -611,9 +611,28 @@ def generate_text(prompt, temp=0.7):
     #response.raise_for_status()
     return response.json()["choices"][0]["message"]["content"]
 
-def main():
-    st.title("Txplib File Uploader and Scenario Description")
-    
+# Function to create a Persona Library entry
+def create_persona_library_entry(name, file_id):
+    create_url = f"{base_url}/entries"
+    payload = {
+        "fields": {
+            "name": {"en-US": name},
+            "file": {"en-US": {"sys": {"type": "Link", "linkType": "Asset", "id": file_id}}}
+        }
+    }
+    headers_with_type = headers.copy()
+    headers_with_type["X-Contentful-Content-Type"] = "personaLibrary"
+    response = requests.post(create_url, headers=headers_with_type, json=payload)
+    return response.json()
+
+# Streamlit app
+st.title("Contentful Library Creator")
+
+# Mode Selection
+mode = st.selectbox("Choose Mode", ["Scenario Library", "Persona Library"])    
+
+if mode == "Scenario Library":
+    st.header("Upload .TXPLIB file")
     uploaded_file = st.file_uploader("Upload a .txplib file", type="txplib")
     file_name = uploaded_file.name  # Get the .txplib file name
     raw_txplib_data = uploaded_file.read()
@@ -682,5 +701,22 @@ def main():
                     else:
                         st.warning("No images selected for upload.")
 
-if __name__ == "__main__":
-    main()
+elif mode == "Persona Library":
+    st.header("Step 1: Upload .tpp File")
+    uploaded_file = st.file_uploader("Choose a .tpp file", accept_multiple_files=False, type=["tpp"])
+
+    if uploaded_file:
+        st.write("Uploading .tpp file...")
+        file_name = uploaded_file.name
+        content_type = "application/octet-stream"  # Typical content type for .tpp files
+        upload_response = upload_asset(uploaded_file.getvalue(), file_name, content_type)
+        asset_id = upload_response.get("sys", {}).get("id")
+        publish_response = publish_asset(asset_id)
+        st.write("File uploaded and published:", {"file_name": file_name, "asset_id": asset_id})
+
+    st.header("Step 2: Create Persona Library Entry")
+    name = st.text_input("Name")
+
+    if st.button("Create Persona Library Entry"):
+        create_response = create_persona_library_entry(name, asset_id)
+        st.write("Persona Library Entry Created:", create_response)
