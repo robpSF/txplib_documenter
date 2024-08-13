@@ -682,7 +682,7 @@ def create_tpp_library_entry(asset_id, file_name):
     headers = {
         "Authorization": f"Bearer {st.secrets['CONTENTFUL_ACCESS_TOKEN']}",
         "Content-Type": "application/vnd.contentful.management.v1+json",
-        "X-Contentful-Content-Type": "scenarioLibrary"  # Ensure this matches your Contentful content type ID
+        "X-Contentful-Content-Type": "personaLibrary"  # Ensure this matches your Contentful content type ID
     }
     data = {
         "fields": {
